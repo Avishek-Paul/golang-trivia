@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"time"
@@ -18,9 +19,11 @@ type problem struct {
 }
 
 // define flags as global variables
-var csvFilePath string
-var randomize bool
-var quizTime int
+var (
+	csvFilePath string
+	randomize   bool
+	quizTime    int
+)
 
 func init() {
 	flag.StringVar(&csvFilePath, "csv", "questions.csv", "path to csv file containg questions")
@@ -98,5 +101,18 @@ func readProblemsCSV() []problem {
 			answer:   int(currAnswer),
 		}
 	}
+
+	if randomize {
+		problems = shuffleProblems(problems)
+	}
+
+	return problems
+}
+
+func shuffleProblems(problems []problem) []problem {
+	rand.Seed(time.Now().Unix())
+	rand.Shuffle(len(problems), func(i, j int) {
+		problems[i], problems[j] = problems[j], problems[i]
+	})
 	return problems
 }
