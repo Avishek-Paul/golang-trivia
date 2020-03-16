@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -16,17 +17,29 @@ type problem struct {
 	answer   int
 }
 
+// define flags as global variables
+var csvFilePath string
+var randomize bool
+var quizTime int
+
+func init() {
+	flag.StringVar(&csvFilePath, "csv", "questions.csv", "path to csv file containg questions")
+	flag.BoolVar(&randomize, "random", false, "if included, randomizes question order")
+	flag.IntVar(&quizTime, "time", 10, "duration of quiz in seconds")
+	flag.Parse()
+}
+
 func main() {
 
 	//  Read in the problems
-	problems := readProblemsCSV("questions.csv")
+	problems := readProblemsCSV()
 	numCorrect := 0
 
 	fmt.Println("---Generic Quiz Game---")
 	fmt.Println("Press [Enter] to start")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 
-	timeout := time.After(time.Second * time.Duration(5))
+	timeout := time.After(time.Second * time.Duration(quizTime))
 	ansChannel := make(chan int)
 
 	// loop through the problems
@@ -62,12 +75,11 @@ loop:
 	fmt.Printf("You received a final score of %.2f%%\n", float64(numCorrect)/float64(len(problems))*100)
 }
 
-func readProblemsCSV(filepath string) []problem {
-	csvFilename := flag.String("csv", filepath, "a csv file in the format of 'question,answer'")
-	flag.Parse()
+func readProblemsCSV() []problem {
 
-	file, err := os.Open(*csvFilename)
+	file, err := os.Open(csvFilePath)
 	if err != nil {
+		log.Fatalf("Could not open file at path: %s\nError:\n\t'%s'", csvFilePath, err)
 		os.Exit(1)
 	}
 
